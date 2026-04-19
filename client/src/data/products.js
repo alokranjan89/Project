@@ -1,0 +1,38 @@
+export const products = [
+  {
+    id: 1,
+    name: "Red Dress",
+    category: "clothing",
+    description: "Beautiful red party dress for women",
+    tags: ["dress", "fashion", "women"],
+    price: 1499,
+    image: "https://images.unsplash.com/photo-1521334884684-d80222895322",
+  },
+  {
+    id: 2,
+    name: "Lipstick",
+    category: "shringaar",
+    description: "Matte lipstick for daily use",
+    tags: ["makeup", "beauty", "cosmetics"],
+    price: 299,
+    image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa",
+  },
+  {
+    id: 3,
+    name: "Toy Car",
+    category: "games",
+    description: "Fun toy car for kids",
+    tags: ["toy", "kids", "game"],
+    price: 499,
+    image: "https://images.unsplash.com/photo-1594787318286-3d835c1d207f",
+  },
+  {
+    id: 4,
+    name: "Kurti",
+    category: "clothing",
+    description: "Traditional Indian ethnic dress",
+    tags: ["dress", "ethnic", "women"],
+    price: 999,
+    image: "https://images.unsplash.com/photo-1618354691373-d851c5c3a990",
+  },
+];
