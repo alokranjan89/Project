@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -8,21 +9,17 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Category from "./pages/Category";
 import Search from "./pages/Search";
-import NotFound from "./pages/NotFound";
 import Offers from "./pages/Offers";
+import Wishlist from "./pages/Wishlist";
+import NotFound from "./pages/NotFound";
 
-/* 🔥 Animation Wrapper */
 function AnimatedRoutes() {
   const location = useLocation();
 
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        
         <Route path="/" element={<Layout />}>
-
-          {/* Wrap EACH PAGE with motion */}
-          
           <Route
             index
             element={
@@ -55,6 +52,15 @@ function AnimatedRoutes() {
             element={
               <PageWrapper>
                 <Cart />
+              </PageWrapper>
+            }
+          />
+
+          <Route
+            path="wishlist"
+            element={
+              <PageWrapper>
+                <Wishlist />
               </PageWrapper>
             }
           />
@@ -94,30 +100,41 @@ function AnimatedRoutes() {
               </PageWrapper>
             }
           />
-
         </Route>
       </Routes>
     </AnimatePresence>
   );
 }
 
-/* 🔥 Reusable Animation */
+const ScrollToTop = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  }, [location.pathname]);
+
+  return null;
+};
+
+const MotionPage = motion.div;
+
 const PageWrapper = ({ children }) => {
   return (
-    <motion.div
+    <MotionPage
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.3 }}
     >
       {children}
-    </motion.div>
+    </MotionPage>
   );
 };
 
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AnimatedRoutes />
     </BrowserRouter>
   );

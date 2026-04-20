@@ -1,23 +1,25 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-const CartContext = createContext();
+import { CartContext } from "./cartContextObject";
 
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(() => {
     try {
       const saved = localStorage.getItem("cart");
       return saved ? JSON.parse(saved) : [];
-    } catch (err) {
+    } catch {
       return [];
     }
   });
 
-  // Save to localStorage
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
+    try {
+      localStorage.setItem("cart", JSON.stringify(cart));
+    } catch (err) {
+      console.error("Unable to persist cart", err);
+    }
   }, [cart]);
 
-  // Add to cart
   const addToCart = (product) => {
     setCart((prev) => {
       const exist = prev.find((item) => item.id === product.id);
@@ -34,39 +36,33 @@ export const CartProvider = ({ children }) => {
     });
   };
 
-  // Remove item
   const removeFromCart = (id) => {
     setCart((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // Increase quantity
   const increaseQty = (id) => {
     setCart((prev) =>
       prev.map((item) =>
-        item.id === id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
+        item.id === id ? { ...item, quantity: item.quantity + 1 } : item
       )
     );
   };
 
-  // Decrease quantity
   const decreaseQty = (id) => {
     setCart((prev) =>
       prev
         .map((item) =>
-          item.id === id
-            ? { ...item, quantity: item.quantity - 1 }
-            : item
+          item.id === id ? { ...item, quantity: item.quantity - 1 } : item
         )
         .filter((item) => item.quantity > 0)
     );
   };
 
-  // ✅ Total items
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const clearCart = () => {
+    setCart([]);
+  };
 
-  // ✅ Total price
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
@@ -80,6 +76,7 @@ export const CartProvider = ({ children }) => {
         removeFromCart,
         increaseQty,
         decreaseQty,
+        clearCart,
         totalItems,
         totalPrice,
       }}
@@ -88,5 +85,3 @@ export const CartProvider = ({ children }) => {
     </CartContext.Provider>
   );
 };
-
-export const useCart = () => useContext(CartContext);

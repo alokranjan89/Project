@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState } from "react";
+import { useState } from "react";
 
-const SearchContext = createContext();
+import { SearchContext } from "./searchContextObject";
 
 export const SearchProvider = ({ children }) => {
   const [query, setQuery] = useState("");
@@ -11,5 +11,3 @@ export const SearchProvider = ({ children }) => {
     </SearchContext.Provider>
   );
 };
-
-export const useSearch = () => useContext(SearchContext);
