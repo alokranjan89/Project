@@ -3,6 +3,9 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 
 import Layout from "./components/Layout";
+import AdminLayout from "./components/AdminLayout";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
@@ -11,6 +14,13 @@ import Category from "./pages/Category";
 import Search from "./pages/Search";
 import Offers from "./pages/Offers";
 import Wishlist from "./pages/Wishlist";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminProducts from "./pages/AdminProducts";
+import AdminProductForm from "./pages/AdminProductForm";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 function AnimatedRoutes() {
@@ -66,15 +76,6 @@ function AnimatedRoutes() {
           />
 
           <Route
-            path="checkout"
-            element={
-              <PageWrapper>
-                <Checkout />
-              </PageWrapper>
-            }
-          />
-
-          <Route
             path="search"
             element={
               <PageWrapper>
@@ -87,20 +88,52 @@ function AnimatedRoutes() {
             path="offers"
             element={
               <PageWrapper>
-                <Offers />
-              </PageWrapper>
-            }
-          />
+              <Offers />
+            </PageWrapper>
+          }
+        />
 
-          <Route
-            path="*"
-            element={
-              <PageWrapper>
-                <NotFound />
-              </PageWrapper>
-            }
-          />
+          <Route element={<ProtectedRoute />}>
+            <Route
+              path="checkout"
+              element={
+                <PageWrapper>
+                  <Checkout />
+                </PageWrapper>
+              }
+            />
+
+            <Route
+              path="profile"
+              element={
+                <PageWrapper>
+                  <Profile />
+                </PageWrapper>
+              }
+            />
+          </Route>
         </Route>
+
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route element={<AdminProtectedRoute />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="products/new" element={<AdminProductForm />} />
+            <Route path="products/:id/edit" element={<AdminProductForm />} />
+          </Route>
+        </Route>
+
+        <Route
+          path="*"
+          element={
+            <PageWrapper>
+              <NotFound />
+            </PageWrapper>
+          }
+        />
       </Routes>
     </AnimatePresence>
   );
@@ -110,8 +143,14 @@ const ScrollToTop = () => {
   const location = useLocation();
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-  }, [location.pathname]);
+    const shouldSmoothScroll = location.state?.scrollToTop;
+
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: shouldSmoothScroll ? "smooth" : "auto",
+    });
+  }, [location.pathname, location.state]);
 
   return null;
 };

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { products } from "../data/products";
+import { useProductCatalog } from "./useProductCatalog";
 import { WishlistContext } from "./wishlistContextObject";
 
 export const WishlistProvider = ({ children }) => {
+  const { products } = useProductCatalog();
   const [wishlistIds, setWishlistIds] = useState(() => {
     try {
       const savedWishlist = localStorage.getItem("wishlistIds");
@@ -24,7 +25,7 @@ export const WishlistProvider = ({ children }) => {
 
   const wishlistItems = useMemo(
     () => products.filter((product) => wishlistIds.includes(product.id)),
-    [wishlistIds]
+    [products, wishlistIds]
   );
 
   const isWishlisted = (productId) => wishlistIds.includes(productId);

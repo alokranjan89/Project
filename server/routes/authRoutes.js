@@ -1,5 +1,9 @@
 import express from "express";
-import { registerUser, loginUser } from "../controllers/authController.js";
+import {
+  registerUser,
+  loginUser,
+  getProfile,
+} from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -11,13 +15,6 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 
 // Protected route
-router.get("/profile", protect, (req, res) => {
-  res.json({
-    _id: req.user._id,
-    name: req.user.name,
-    email: req.user.email,
-    role: req.user.role,
-  });
-});
+router.get("/profile", protect, getProfile);
 
 export default router;

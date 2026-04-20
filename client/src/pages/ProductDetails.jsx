@@ -3,13 +3,14 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { useCart } from "../context/useCart";
-import { products } from "../data/products";
+import { useProductCatalog } from "../context/useProductCatalog";
 import { formatCurrency } from "../utils/format";
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { products } = useProductCatalog();
 
   const product = products.find((item) => item.id === Number(id));
 
@@ -40,9 +41,7 @@ const ProductDetails = () => {
           <span>{product.stock > 0 ? "✅ In stock" : "❌ Out of stock"}</span>
         </div>
 
-        <p className="mt-4 text-gray-600 leading-relaxed">
-          {product.description}
-        </p>
+        <p className="mt-4 text-gray-600 leading-relaxed">{product.description}</p>
 
         <div className="mt-6 flex gap-4">
           <button

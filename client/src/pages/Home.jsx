@@ -5,11 +5,12 @@ import { motion } from "framer-motion";
 import CategoryCard from "../components/CategoryCard";
 import ProductCard from "../components/ProductCard";
 import SkeletonCard from "../components/SkeletonCard";
-import { categoryHighlights, featuredProducts } from "../data/products";
+import { useProductCatalog } from "../context/useProductCatalog";
 
 const Home = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const { categoryHighlights, featuredProducts } = useProductCatalog();
   const MotionCard = motion.div;
 
   useEffect(() => {
@@ -52,9 +53,7 @@ const Home = () => {
               </button>
             </div>
 
-            <p className="text-sm text-gray-500 mt-6">
-              ⭐ 10,000+ happy customers
-            </p>
+            <p className="text-sm text-gray-500 mt-6">⭐ 10,000+ happy customers</p>
           </div>
 
           <div className="relative">
@@ -125,7 +124,7 @@ const Home = () => {
       <section className="max-w-7xl mx-auto px-6 pb-20 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
         {[
           { label: "Customers", value: "10K+ 😊" },
-          { label: "Products", value: "120+ 🛒" },
+          { label: "Products", value: `${featuredProducts.length}+ 🛒` },
           { label: "Ratings", value: "4.8⭐" },
           { label: "Delivery", value: "Fast 🚚" },
         ].map((item, i) => (

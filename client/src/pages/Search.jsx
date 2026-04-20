@@ -1,11 +1,12 @@
 import React from "react";
 
 import ProductCard from "../components/ProductCard";
+import { useProductCatalog } from "../context/useProductCatalog";
 import { useSearch } from "../context/useSearch";
-import { products } from "../data/products";
 
 const Search = () => {
   const { query } = useSearch();
+  const { products } = useProductCatalog();
   const q = query.toLowerCase();
 
   const filtered = products.filter((product) => {

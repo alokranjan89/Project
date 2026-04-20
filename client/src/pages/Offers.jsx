@@ -1,9 +1,11 @@
 import React from "react";
 
 import ProductCard from "../components/ProductCard";
-import { offerProducts } from "../data/products";
+import { useProductCatalog } from "../context/useProductCatalog";
 
 const Offers = () => {
+  const { offerProducts } = useProductCatalog();
+
   return (
     <div className="bg-gray-50 min-h-screen py-10">
       <div className="max-w-7xl mx-auto px-6">
@@ -15,9 +17,7 @@ const Offers = () => {
             </p>
           </div>
 
-          <span className="text-sm text-gray-400">
-            Hurry before stock ends ⏳
-          </span>
+          <span className="text-sm text-gray-400">Hurry before stock ends ⏳</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

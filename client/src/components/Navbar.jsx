@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Search,
   ShoppingCart,
@@ -13,15 +13,18 @@ import {
 import { useSearch } from "../context/useSearch";
 import { useCart } from "../context/useCart";
 import { useWishlist } from "../context/useWishlist";
+import { useAuth } from "../context/useAuth";
 
 const Navbar = () => {
   const [showCategories, setShowCategories] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const { query, setQuery } = useSearch();
+  const location = useLocation();
   const navigate = useNavigate();
   const { totalItems } = useCart();
   const { wishlistCount } = useWishlist();
+  const { isAuthenticated, isAdminAuthenticated, user } = useAuth();
 
   const categories = useMemo(
     () => [
@@ -37,22 +40,52 @@ const Navbar = () => {
     setMenuOpen(false);
   };
 
+  const goHome = () => {
+    setMenuOpen(false);
+    setShowCategories(false);
+
+    if (location.pathname === "/") {
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+      return;
+    }
+
+    navigate("/", { state: { scrollToTop: true } });
+  };
+
   const goToCategory = (slug) => {
     navigate(`/category/${slug}`);
     setMenuOpen(false);
     setShowCategories(false);
   };
 
+  const openAccount = () => {
+    setMenuOpen(false);
+    setShowCategories(false);
+
+    if (isAdminAuthenticated) {
+      navigate("/admin");
+      return;
+    }
+
+    if (isAuthenticated) {
+      navigate("/profile");
+      return;
+    }
+
+    navigate("/login");
+  };
+
   return (
     <header className="w-full sticky top-0 bg-white/90 backdrop-blur-md z-50 shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-        <Link
-          to="/"
-          className="shrink-0 inline-flex items-center text-2xl font-bold text-pink-600 tracking-tight rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
+        <button
+          type="button"
+          onClick={goHome}
+          className="shrink-0 inline-flex items-center cursor-pointer text-2xl font-bold text-pink-600 tracking-tight rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
           aria-label="Go to homepage"
         >
           MyStore
-        </Link>
+        </button>
 
         <div className="hidden md:flex items-center bg-gray-100 hover:bg-white focus-within:bg-white rounded-full px-4 py-2 w-[40%] focus-within:ring-2 focus-within:ring-pink-400 transition">
           <Search size={18} className="text-gray-500" aria-hidden="true" />
@@ -154,8 +187,22 @@ const Navbar = () => {
 
           <button
             type="button"
+            onClick={openAccount}
             className="cursor-pointer group"
-            aria-label="Open account"
+            aria-label={
+              isAdminAuthenticated
+                ? "Open admin dashboard"
+                : isAuthenticated
+                  ? "Open profile"
+                  : "Open login"
+            }
+            title={
+              isAdminAuthenticated
+                ? "Admin dashboard"
+                : isAuthenticated
+                  ? user?.name || "My profile"
+                  : "Login"
+            }
           >
             <User size={20} className="group-hover:text-pink-600 transition" />
           </button>
@@ -226,6 +273,18 @@ const Navbar = () => {
             className="text-left text-pink-600 font-medium"
           >
             Offers
+          </button>
+
+          <button
+            type="button"
+            onClick={openAccount}
+            className="text-left border-t pt-2"
+          >
+            {isAdminAuthenticated
+              ? "Admin Dashboard"
+              : isAuthenticated
+                ? "My Profile"
+                : "Login / Register"}
           </button>
         </div>
       </div>
