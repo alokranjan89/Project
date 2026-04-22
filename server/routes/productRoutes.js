@@ -5,6 +5,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  resetProducts,
 } from "../controllers/productController.js";
 
 import { protect, admin } from "../middleware/authMiddleware.js";
@@ -16,6 +17,8 @@ router
   .route("/")
   .get(getProducts)
   .post(protect, admin, createProduct);
+
+router.post("/reset", protect, admin, resetProducts);
 
 // GET single | UPDATE | DELETE
 router

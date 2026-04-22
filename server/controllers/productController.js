@@ -1,98 +1,185 @@
-import Product from "../models/product.js";
+import mongoose from "mongoose";
 
-// GET ALL PRODUCTS
+import Product from "../models/product.js";
+import defaultProducts from "../data/defaultProducts.js";
+import {
+  normalizeProductInput,
+  serializeProduct,
+  validateProductInput,
+} from "../utils/productPayload.js";
+
+const findProduct = async (identifier) => {
+  const numericId = Number(identifier);
+
+  if (Number.isInteger(numericId) && numericId > 0) {
+    return Product.findOne({ productId: numericId });
+  }
+
+  if (mongoose.Types.ObjectId.isValid(identifier)) {
+    return Product.findById(identifier);
+  }
+
+  return null;
+};
+
+const buildProductFilters = (query) => {
+  const filters = {};
+
+  if (query.category) {
+    const category = String(query.category).trim().toLowerCase();
+    filters.category = category === "shringar" ? "shringaar" : category;
+  }
+
+  if (query.search) {
+    const pattern = String(query.search).trim();
+
+    if (pattern) {
+      filters.$or = [
+        { name: { $regex: pattern, $options: "i" } },
+        { description: { $regex: pattern, $options: "i" } },
+        { tags: { $elemMatch: { $regex: pattern, $options: "i" } } },
+      ];
+    }
+  }
+
+  return filters;
+};
+
 export const getProducts = async (req, res) => {
   try {
-    const products = await Product.find();
-    res.json(products);
+    const filters = buildProductFilters(req.query);
+    const rawLimit = Number(req.query.limit);
+    const limit =
+      Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 100) : null;
+
+    let query = Product.find(filters).sort({ productId: 1 });
+
+    if (limit) {
+      query = query.limit(limit);
+    }
+
+    let products = await query;
+
+    if (req.query.offers === "true") {
+      products = products.filter((product) => product.originalPrice > product.price);
+    }
+
+    if (req.query.featured === "true") {
+      products = products.slice(0, 8);
+    }
+
+    return res.json(products.map(serializeProduct));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// GET SINGLE PRODUCT
 export const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await findProduct(req.params.id);
 
-    if (product) {
-      res.json(product);
-    } else {
-      res.status(404).json({ message: "Product not found" });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
     }
-  } catch (error) {
-    res.status(500).json({ message: "Invalid product ID" });
+
+    return res.json(serializeProduct(product));
+  } catch {
+    return res.status(500).json({ message: "Unable to load product" });
   }
 };
 
-// CREATE PRODUCT
 export const createProduct = async (req, res) => {
   try {
-    const {
-      name,
-      description,
-      price,
-      images,
-      category,
-      countInStock,
-      attributes,
-    } = req.body;
+    const normalizedProduct = normalizeProductInput(req.body);
+    const errors = validateProductInput(normalizedProduct);
 
-    const product = new Product({
-      name,
-      description,
-      price,
-      images,
-      category,
-      countInStock,
-      attributes,
+    if (errors.length > 0) {
+      return res.status(400).json({ message: errors[0], errors });
+    }
+
+    const lastProduct = await Product.findOne().sort({ productId: -1 }).select("productId");
+    const nextProductId = (lastProduct?.productId || 0) + 1;
+
+    const product = await Product.create({
+      ...normalizedProduct,
+      productId: nextProductId,
       user: req.user._id,
     });
 
-    const createdProduct = await product.save();
-    res.status(201).json(createdProduct);
+    return res.status(201).json(serializeProduct(product));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// UPDATE PRODUCT
 export const updateProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await findProduct(req.params.id);
 
-    if (product) {
-      product.name = req.body.name ?? product.name;
-      product.description = req.body.description ?? product.description;
-      product.price = req.body.price ?? product.price;
-      product.images = req.body.images ?? product.images;
-      product.category = req.body.category ?? product.category;
-      product.countInStock =
-        req.body.countInStock ?? product.countInStock;
-      product.attributes = req.body.attributes ?? product.attributes;
-
-      const updatedProduct = await product.save();
-      res.json(updatedProduct);
-    } else {
-      res.status(404).json({ message: "Product not found" });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
     }
+
+    const normalizedProduct = normalizeProductInput({
+      ...serializeProduct(product),
+      ...req.body,
+    });
+    const errors = validateProductInput(normalizedProduct, { partial: true });
+
+    if (errors.length > 0) {
+      return res.status(400).json({ message: errors[0], errors });
+    }
+
+    Object.assign(product, normalizedProduct);
+    const updatedProduct = await product.save();
+
+    return res.json(serializeProduct(updatedProduct));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// DELETE PRODUCT
 export const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await findProduct(req.params.id);
 
-    if (product) {
-      await product.deleteOne();
-      res.json({ message: "Product removed" });
-    } else {
-      res.status(404).json({ message: "Product not found" });
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
     }
-  } catch (error) {
-    res.status(500).json({ message: "Invalid product ID" });
+
+    await product.deleteOne();
+    return res.json({ message: "Product removed" });
+  } catch {
+    return res.status(500).json({ message: "Unable to delete product" });
+  }
+};
+
+export const resetProducts = async (req, res) => {
+  try {
+    await Product.deleteMany({});
+
+    const nextProducts = defaultProducts.map((product) => ({
+      ...product,
+      user: req.user._id,
+    }));
+
+    await Product.insertMany(nextProducts);
+
+    return res.json(nextProducts.map((product) => ({
+      id: product.productId,
+      name: product.name,
+      description: product.description,
+      category: product.category,
+      tags: product.tags || [],
+      price: product.price,
+      originalPrice: product.originalPrice,
+      rating: product.rating,
+      reviews: product.reviews,
+      stock: product.stock,
+      badge: product.badge,
+      image: product.image,
+    })));
+  } catch {
+    return res.status(500).json({ message: "Unable to reset products" });
   }
 };
